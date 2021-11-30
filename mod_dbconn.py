@@ -5,7 +5,7 @@ class mod_dbconn:
         def __init__(self):
             self.db = pymysql.connect(host='localhost',
                                       user='root',
-                                      password='thddmswn99',
+                                      password='thddmswn99', #
                                       db='demo_video',
                                       charset='utf8')
             self.cursor = self.db.cursor(pymysql.cursors.DictCursor)
