@@ -1,11 +1,22 @@
 from flask_restful import reqparse
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
+# from sqlalchemy import create_engine, text
+import pymysql
+import mod_dbconn
 
 import numpy as np
 import pickle as p
 import json
 
 app = Flask(__name__)
+
+# def create_app(test_config = None):
+#     app = Flask(__name__)
+#     app.config.from_pyfile('config.py')
+#
+#     database = create_engine(app.config['DB_URL'], encoding = 'utf-8')
+#     app.database = database
+#     return app
 
 @app.route('/')
 def hello_world():  # put application's code here
@@ -15,41 +26,63 @@ def hello_world():  # put application's code here
 @app.route("/tospring")
 def spring():
     return "test"
+#
+# @app.route('/db')
+# def select():
+#     db_class = mod_dbconn.Database()
+#
+#     sql = "SELECT origin_video_name \
+#                 FROM uploaded_video"
+#     row = db_class.executeAll(sql)
+#
+#     print(row)
+#
+#     # return render_template('db.html', resultData=row[0])
+
 
 # 스프링에서 데이터 받는 테스트 코드
-@app.route('/getVideo/', methods=['POST'])
-def getVideoName():
-    img = request.files['video']
+@app.route('/getVideoId/', methods=['GET'])
+def getVideoId():
+    # Spring 에서 전달받은 비디오 아이디 받기
+    # videoId = int(request.form['videoId'])
+    videoId=1
+    db_class = mod_dbconn.Database()
+    sql = "SELECT origin_video_name \
+                    FROM uploaded_video \
+                    WHERE _id=%s"
+    row = db_class.executeAll(sql,videoId)
 
+    print(row)
     return jsonify({'result': 'send completely'})
 
-# @app.route('/predict/', methods=['POST'])
-# def predict():
-#     parser = reqparse.RequestParser()
-#     parser.add_argument('petal_length')
-#     parser.add_argument('petal_width')
-#     parser.add_argument('sepal_length')
-#     parser.add_argument('sepal_width')
-#
-#     # creates dict
-#     args = parser.parse_args()
-#     # convert input to array
-#     X_new = np.fromiter(args.values(), dtype=float)
-#
-#     # predict - return ndarray
-#     prediction = model.predict([X_new])
-#
-#     # result
-#     out = {'Prediction': get_label(prediction[0])}
-#
-#     return out, 200
-#
-# def get_label(label_num):
-#     labels = {'0' : 'iris-setosa',
-#               '1' : 'iris-versicolor',
-#               '2' : 'iris-virginica'}
-#
-#     return labels.get(str(label_num))
+
+# mysql 연결하는 코드
+class mod_dbconn:
+    class Database:
+        def __init__(self):
+            self.db = pymysql.connect(host='localhost',
+                                      user='root',
+                                      password='thddmswn99',
+                                      db='demo_video',
+                                      charset='utf8')
+            self.cursor = self.db.cursor(pymysql.cursors.DictCursor)
+
+        def execute(self, query, args={}):
+            self.cursor.execute(query, args)
+
+        def executeOne(self, query, args={}):
+            self.cursor.execute(query, args)
+            row = self.cursor.fetchone()
+            return row
+
+        def executeAll(self, query, args={}):
+            self.cursor.execute(query, args)
+            row = self.cursor.fetchall()
+            return row
+
+        def commit(self):
+            self.db.commit()
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
+
