@@ -10,13 +10,6 @@ import json
 
 app = Flask(__name__)
 
-# def create_app(test_config = None):
-#     app = Flask(__name__)
-#     app.config.from_pyfile('config.py')
-#
-#     database = create_engine(app.config['DB_URL'], encoding = 'utf-8')
-#     app.database = database
-#     return app
 
 @app.route('/')
 def hello_world():  # put application's code here
@@ -57,31 +50,31 @@ def getVideoId():
 
 
 # mysql 연결하는 코드
-class mod_dbconn:
-    class Database:
-        def __init__(self):
-            self.db = pymysql.connect(host='localhost',
-                                      user='root',
-                                      password='thddmswn99',
-                                      db='demo_video',
-                                      charset='utf8')
-            self.cursor = self.db.cursor(pymysql.cursors.DictCursor)
-
-        def execute(self, query, args={}):
-            self.cursor.execute(query, args)
-
-        def executeOne(self, query, args={}):
-            self.cursor.execute(query, args)
-            row = self.cursor.fetchone()
-            return row
-
-        def executeAll(self, query, args={}):
-            self.cursor.execute(query, args)
-            row = self.cursor.fetchall()
-            return row
-
-        def commit(self):
-            self.db.commit()
+# class mod_dbconn:
+#     class Database:
+#         def __init__(self):
+#             self.db = pymysql.connect(host='localhost',
+#                                       user='root',
+#                                       password='thddmswn99',
+#                                       db='demo_video',
+#                                       charset='utf8')
+#             self.cursor = self.db.cursor(pymysql.cursors.DictCursor)
+#
+#         def execute(self, query, args={}):
+#             self.cursor.execute(query, args)
+#
+#         def executeOne(self, query, args={}):
+#             self.cursor.execute(query, args)
+#             row = self.cursor.fetchone()
+#             return row
+#
+#         def executeAll(self, query, args={}):
+#             self.cursor.execute(query, args)
+#             row = self.cursor.fetchall()
+#             return row
+#
+#         def commit(self):
+#             self.db.commit()
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
