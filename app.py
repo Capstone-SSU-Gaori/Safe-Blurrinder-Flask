@@ -6,7 +6,8 @@ import pathlib
 import shutil
 
 app = Flask(__name__)
-db_class = mod_dbconn.Database()
+dbClass = mod_dbconn.Database()
+
 # processedVideoId = 0  # 전역 변수로 선언
 
 # app.py 실행하고 일단 localhost:5000/createTable 로 접속해서 table 부터 생성해주세요!
@@ -20,8 +21,8 @@ def createTable():
              video_path VARCHAR(256) NOT NULL \
              )"
 
-    db_class.executeOne(sql)
-    db_class.commit()
+    dbClass.executeOne(sql)
+    dbClass.commit()
     return "Success!"
 
 @app.route('/')
@@ -43,45 +44,52 @@ def getVideoId():
         sql = "SELECT * \
                         FROM uploaded_video \
                         WHERE _id=%s"
-        row = db_class.executeOne(sql,videoId)
-        db_class.commit()
+        row = dbClass.executeOne(sql,videoId)
+        dbClass.commit()
         print(row['video_path']) # 로컬에서 비디오가 어디에 저장되어 있는지
-        # fileUpload(row)
-        # pathlib.Path.home: 사용자의 홈 디렉토리(~) ex) C:\Users\Windows10
-        path = str(pathlib.Path.home()) + "\GaoriProcessedVideos"  # 새로 저장할 폴더
-        if not os.path.exists(path):  # 폴더가 없는 경우 생성하기
-            os.makedirs(path)
-            return "false"
-        else:  # 폴더가 있는 경우 폴더에 동영상 업로드
-            processed_video_name = row['origin_video_name']  # '방구석 수련회 장기자랑 - YouTube - Chrome 2021-11-05 04-18-36.mp4'
-            # 구현 완료 후 : 동영상 이름을 지정
+        processVideo(videoId)
 
-            saved_video_name = row['saved_video_name']
-            # 'af4d1f8d24169c2a8988625d4f2e3455.mp4' ( 완성영상도 같은 이름으로 저장한다고 가정)
-
-            video_path = row['video_path']  # 'C:\\Users\\Windows10\\GaoriVideos\\af4d1f8d24169c2a8988625d4f2e3455.mp4'
-            # 구현 완료 후에는 이게 필요없을 듯
-
-            shutil.copy(video_path, path)  # 일단은 기존 영상을 새로운 폴더에 복사하는 형태로 해둠
-
-            new_video_path = "{}\{}".format(path, saved_video_name)  # 완성 영상이 저장될 새로운 경로
-
-            sql = "INSERT INTO processed_video(processed_video_name, saved_video_name, video_path) \
-                                VALUES(%s, %s, %s)"  # 완료된 영상을
-            val = (processed_video_name, saved_video_name, new_video_path)
-            row = db_class.executeOne(sql, val)
-            db_class.commit()
-            find_sql = "SELECT * \
-                                                FROM processed_video \
-                                                WHERE saved_video_name=%s"
-            row = db_class.executeOne(find_sql, saved_video_name)  # 일단은 저장한 애를 saved_video_name으로 찾아옴
-            db_class.commit()
-            # return "test"
-            global processedVideoId
-            processedVideoId = str(row['_id'])
-            return processedVideoId  # 방금 저장한 videoId를 리턴
+        # # fileUpload(row)
+        # # pathlib.Path.home: 사용자의 홈 디렉토리(~) ex) C:\Users\Windows10
+        # path = str(pathlib.Path.home()) + "\GaoriProcessedVideos"  # 새로 저장할 폴더
+        # if not os.path.exists(path):  # 폴더가 없는 경우 생성하기
+        #     os.makedirs(path)
+        #     return "false"
+        # else:  # 폴더가 있는 경우 폴더에 동영상 업로드
+        #     processed_video_name = row['origin_video_name']  # '방구석 수련회 장기자랑 - YouTube - Chrome 2021-11-05 04-18-36.mp4'
+        #     # 구현 완료 후 : 동영상 이름을 지정
+        #
+        #     saved_video_name = row['saved_video_name']
+        #     # 'af4d1f8d24169c2a8988625d4f2e3455.mp4' ( 완성영상도 같은 이름으로 저장한다고 가정)
+        #
+        #     video_path = row['video_path']  # 'C:\\Users\\Windows10\\GaoriVideos\\af4d1f8d24169c2a8988625d4f2e3455.mp4'
+        #     # 구현 완료 후에는 이게 필요없을 듯
+        #
+        #     shutil.copy(video_path, path)  # 일단은 기존 영상을 새로운 폴더에 복사하는 형태로 해둠
+        #
+        #     new_video_path = "{}\{}".format(path, saved_video_name)  # 완성 영상이 저장될 새로운 경로
+        #
+        #     sql = "INSERT INTO processed_video(processed_video_name, saved_video_name, video_path) \
+        #                         VALUES(%s, %s, %s)"  # 완료된 영상을
+        #     val = (processed_video_name, saved_video_name, new_video_path)
+        #     row = dbClass.executeOne(sql, val)
+        #     dbClass.commit()
+        #     find_sql = "SELECT * \
+        #                                         FROM processed_video \
+        #                                         WHERE saved_video_name=%s"
+        #     row = dbClass.executeOne(find_sql, saved_video_name)  # 일단은 저장한 애를 saved_video_name으로 찾아옴
+        #     dbClass.commit()
+        #     # return "test"
+        #     global processedVideoId
+        #     processedVideoId = str(row['_id'])
+        #     return processedVideoId  # 방금 저장한 videoId를 리턴
     else:
         return processedVideoId
+
+# 스프링에서 데이터 받는 테스트 코드
+@app.route('/processVideo', methods=['GET', 'POST'])
+def processVideo():
+    get_cropimg()
 
 # 스프링으로 데이터 보내는 테스트 코드
 # @app.route("/sendVideoId", methods=['GET'])
