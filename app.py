@@ -1,9 +1,11 @@
 from flask import Flask, jsonify, request, render_template
 from mod_dbconn import mod_dbconn
+from tqdm import tqdm_notebook as tqdm
+from mtcnn import MTCNN
+import matplotlib.pyplot as pp
+import cv2
+from faceRecognition import faceRecognition
 
-import os
-import pathlib
-import shutil
 
 app = Flask(__name__)
 dbClass = mod_dbconn.Database()
@@ -84,12 +86,134 @@ def getVideoId():
         #     processedVideoId = str(row['_id'])
         #     return processedVideoId  # 방금 저장한 videoId를 리턴
     else:
-        return processedVideoId
+        return 2 # 완성 영상비디오 번호를 리턴하도록 바꾸기
 
 # 스프링에서 데이터 받는 테스트 코드
 @app.route('/processVideo', methods=['GET', 'POST'])
 def processVideo():
-    get_cropimg()
+    cap = cv2.VideoCapture('short.mp4')
+    detector = MTCNN()
+    width = round(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = round(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    out = cv2.VideoWriter('output.avi', fourcc, fps, (width, height))
+    tem = []
+    bbox = []
+
+    # tracker 부분
+    trackers = []  # [tracker,id],[tracker,id],[],[],,, 형태 -> tracker를 update하거나 접근: tracker[0]으로 접근
+    all_lists = []  # [x,y,w,h,obj_id,frame_id],[],[],,, 형태로 저장
+    all_crops = []  # [id,img],[id,img] 형태로 저장 (트래커별로 저장)
+    id_ = 1
+
+    ### model 바꿀거면 여기서 바꾸면 됨!!!!!!!!! ###
+    model_name = "Dlib"  # facenet은 FaceNet
+    for i in tqdm(range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))):
+        retval, frame = cap.read()
+        if i == 0:  # 첫 번째 프레임이라면?
+            result = detector.detect_faces(frame)
+            if result != []:  # 감지된 얼굴이 존재한다면
+                for person in result:
+                    if person['confidence'] < 0.8:
+                        continue
+                    bounding_box = person['box']
+                    bounding_box.append(id_)  # x,y,w,h,obj_id,frame_id
+                    bounding_box.append(i)
+                    all_lists.append(bounding_box)
+                    crop, found_id = faceRecognition.get_cropimg(id_, i, bounding_box[0], bounding_box[1], bounding_box[2],
+                                                 bounding_box[3], True, model_name)
+                    all_crops.append([found_id, crop])
+                    tem.append(bounding_box)  # tem에 탐지한 모든 얼굴들의 좌표를 저장
+                    cv2.rectangle(frame, (bounding_box[0], bounding_box[1]),
+                                  (bounding_box[0] + bounding_box[2], bounding_box[1] + bounding_box[3]), (0, 155, 255),
+                                  2)
+                    cv2.putText(frame, "id: " + str(id_), (int(bounding_box[0]), int(bounding_box[1])),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                    id_ += 1
+
+            for t in range(len(result)):
+                trackers.append([cv2.TrackerCSRT_create(), tem[t][4]])  # trackers에 [트래커, id]
+                trackers[t][0].init(frame, (tem[t][0], tem[t][1], tem[t][2], tem[t][3]))
+
+        else:  # 첫 번째 프레임이 아니라면? -> 기존에 존재하던 tracker를 업데이트 (현재 프레임의 정보를 넣어서)
+
+            this_box = []  # 이번 프레임에서 탐지한 객체들의 (x,y,w,h)를 저장
+            result = detector.detect_faces(frame)
+            if result != []:  # 감지된 얼굴이 존재한다면
+                for person in result:
+                    if person['confidence'] < 0.8:
+                        continue
+                    bounding_box = person['box']
+                    this_box.append(bounding_box)
+
+            # 만약 감지된 얼굴 수가 트래커의 수보다 많으면 트래커 다 초기화 하고 다시 추적
+            if (len(this_box) > len(trackers)):
+                print("change")
+                trackers = []
+                for t in range(len(this_box)):
+                    crop, found_id = faceRecognition.get_cropimg(id_, i, this_box[t][0], this_box[t][1], this_box[t][2], this_box[t][3],
+                                                 False, model_name)
+                    if found_id == id_:  # 현재 id랑 같다, 즉 이전에 동일한 얼굴이 탐지된 적이 없었다 else라면 found_id는 이전에 탐지한 객체의 id
+                        id_ += 1
+                    trackers.append(
+                        [cv2.TrackerCSRT_create(), found_id])  # trackers 0번에 tracker, 1번에 그 트래커가 탐지하는 객체의 id가 저장됨
+                    trackers[t][0].init(frame, (this_box[t][0], this_box[t][1], this_box[t][2], this_box[t][3]))
+                    all_crops.append([found_id, crop])  # 어떤 경우에든 id랑 crop image둘 다 저장 (인식 실패 가능성)
+                    all_lists.append([this_box[t][0], this_box[t][1], this_box[t][2], this_box[t][3], found_id, i])
+                    cv2.rectangle(frame, (this_box[t][0], this_box[t][1]),
+                                  (this_box[t][0] + this_box[t][2], this_box[t][1] + this_box[t][3]), (0, 255, 0), 2, 1)
+                    cv2.putText(frame, "id: " + str(found_id), (int(this_box[t][0]), int(this_box[t][1])),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
+            else:
+                # 트래커가 하나라도 객체를 놓치면(여러 이유로 인해) 그렇다면 트래커 배열 싹다 비운다.그리고 mtcnn으로 출력후 다시 초기설정
+                judge = True
+                tempor = []
+                for track in trackers:
+                    res, box = track[0].update(frame)
+                    if res:
+                        x1 = int(box[0])
+                        y1 = int(box[1])
+                        x2 = int(box[0] + box[2])
+                        y2 = int(box[1] + box[3])
+                        tempor.append([x1, y1, x2, y2, track[1]])
+
+                        # cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0),2,1)
+                    else:
+                        judge = False
+                        print(False)
+
+                if (judge == True):  # 트래커가 모든 객체를 탐지했을 때
+                    for t in range(len(tempor)):  # tempor (새롭게 탐지한 객체의 좌표를 추가함) -> 현재 프레임의 update 정보 반영
+                        cv2.rectangle(frame, (tempor[t][0], tempor[t][1]), (tempor[t][2], tempor[t][3]), (0, 255, 0), 2,
+                                      1)
+                        cv2.putText(frame, "id: " + str(tempor[t][4]), (int(tempor[t][0]), int(tempor[t][1])),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                        all_lists.append(
+                            [tempor[t][0], tempor[t][1], tempor[t][2] - tempor[t][0], tempor[t][3] - tempor[t][1],
+                             tempor[t][4], i])
+                else:  # 트래커가 객체를 하나라도 놓쳤을 때 -> 새롭게 트래커 시작
+                    trackers = []  # trackers를 초기화
+                    for t in range(len(this_box)):
+                        crop, found_id = faceRecognition.get_cropimg(id_, i, this_box[t][0], this_box[t][1], this_box[t][2],
+                                                     this_box[t][3], False, model_name)
+                        if found_id == id_:  # 현재 id랑 같다, 즉 이전에 동일한 얼굴이 탐지된 적이 없었다 else라면 found_id는 이전에 탐지한 객체의 id
+                            id_ += 1
+                        trackers.append([cv2.TrackerCSRT_create(), found_id])
+                        trackers[t][0].init(frame, (this_box[t][0], this_box[t][1], this_box[t][2], this_box[t][3]))
+                        all_crops.append([found_id, crop])  # 어떤 경우에든 id랑 crop image둘 다 저장 (인식 실패 가능성)
+                        all_lists.append([this_box[t][0], this_box[t][1], this_box[t][2], this_box[t][3], found_id, i])
+
+                        cv2.rectangle(frame, (this_box[t][0], this_box[t][1]),
+                                      (this_box[t][0] + this_box[t][2], this_box[t][1] + this_box[t][3]), (0, 255, 0),
+                                      2, 1)
+                        cv2.putText(frame, "id: " + str(found_id), (int(this_box[t][0]), int(this_box[t][1])),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
+        out.write(frame)
+        pp.imshow(frame)
+        pp.show()
 
 # 스프링으로 데이터 보내는 테스트 코드
 # @app.route("/sendVideoId", methods=['GET'])
