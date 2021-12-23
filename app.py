@@ -5,7 +5,8 @@ from mtcnn import MTCNN
 import matplotlib.pyplot as pp
 import cv2
 from faceRecognition import faceRecognition
-
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 app = Flask(__name__)
 dbClass = mod_dbconn.Database()
@@ -49,7 +50,8 @@ def getVideoId():
         row = dbClass.executeOne(sql,videoId)
         dbClass.commit()
         print(row['video_path']) # 로컬에서 비디오가 어디에 저장되어 있는지
-        processVideo(videoId)
+        # print(row['origin_video_name'])
+        return processVideo(row['origin_video_name']) # 영상처리함수 호출하기
 
         # # fileUpload(row)
         # # pathlib.Path.home: 사용자의 홈 디렉토리(~) ex) C:\Users\Windows10
@@ -86,12 +88,11 @@ def getVideoId():
         #     processedVideoId = str(row['_id'])
         #     return processedVideoId  # 방금 저장한 videoId를 리턴
     else:
-        return 2 # 완성 영상비디오 번호를 리턴하도록 바꾸기
+        return "Test" # 완성 영상비디오 번호를 리턴하도록 바꾸기
 
-# 스프링에서 데이터 받는 테스트 코드
-@app.route('/processVideo', methods=['GET', 'POST'])
-def processVideo():
-    cap = cv2.VideoCapture('short.mp4')
+def processVideo(videoName):
+    # 파일 찾기
+    cap = cv2.VideoCapture(videoName)
     detector = MTCNN()
     width = round(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = round(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -105,6 +106,7 @@ def processVideo():
     trackers = []  # [tracker,id],[tracker,id],[],[],,, 형태 -> tracker를 update하거나 접근: tracker[0]으로 접근
     all_lists = []  # [x,y,w,h,obj_id,frame_id],[],[],,, 형태로 저장
     all_crops = []  # [id,img],[id,img] 형태로 저장 (트래커별로 저장)
+[1, df ] [1, df2] , [2,df], 2[]
     id_ = 1
 
     ### model 바꿀거면 여기서 바꾸면 됨!!!!!!!!! ###
@@ -214,6 +216,7 @@ def processVideo():
         out.write(frame)
         pp.imshow(frame)
         pp.show()
+        return all_crops
 
 # 스프링으로 데이터 보내는 테스트 코드
 # @app.route("/sendVideoId", methods=['GET'])

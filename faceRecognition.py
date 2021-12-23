@@ -4,6 +4,8 @@ import glob
 from scipy.spatial.distance import cosine
 import cv2
 import dlib
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # models for dlib landmark
 sp = None
@@ -56,7 +58,7 @@ class faceRecognition:
 
     def get_cropimg(self, now_id, frame_id, x1, y1, w, h, firstFrame, model="Dlib"):  # model명 받는걸로 바꿔주기
 
-        cap.set(1, frame_id);
+        cap.set(1, frame_id)
         ret, frame = cap.read()
 
         x1, y1 = int(abs(x1) - 5), int(abs(y1) + 5)
@@ -73,7 +75,7 @@ class faceRecognition:
             img_representation = np.array(img_representation)
             if firstFrame == True:
                 face_vectors.append([img_representation, now_id])
-                return crop_face, now_id;
+                return crop_face, now_id
             found_id = self.find_by_euclidean(img_representation, now_id)
             if found_id == now_id:
                 face_vectors.append([img_representation, found_id])
