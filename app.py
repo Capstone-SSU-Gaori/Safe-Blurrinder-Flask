@@ -56,7 +56,9 @@ def getVideoId():
         print(row['video_path']) # 로컬에서 비디오가 어디에 저장되어 있는지
         # print(row['origin_video_name'])
         videoPath = row['video_path']
-        print(processVideo(videoPath))
+        id=processVideo(str(videoPath))
+        print(id)
+        return "tt"
 
         # print(processVideo(row['origin_video_name']))
         # return processVideo(row['origin_video_name']) # 영상처리함수 호출하기
@@ -99,15 +101,12 @@ def getVideoId():
         return "Test" # 완성 영상비디오 번호를 리턴하도록 바꾸기
 
 def processVideo(videoPath):
-    # 파일 찾기
-    print("hi")
+    face = faceRecognition() # Class의 선언 없이 해당 클래스의 함수를 사용하려 했기 때문에 발생하는 오류
 
     # pathlib.Path.home: 사용자의 홈 디렉토리(~) ex) C:\Users\Windows10
-    # 디비에서 꺼내오기
-
     # path = str(pathlib.Path.home()) + "\GaoriVideos"
     # filePath = os.path.join(path, videoName) # 비디오 이름으로 디비에서 찾아오기
-    print(videoPath)
+    print("processVideo 함수 :" +videoPath)
 
     if os.path.isfile(videoPath):  # 해당 파일이 있는지 확인
         # 영상 객체(파일) 가져오기
@@ -128,7 +127,7 @@ def processVideo(videoPath):
     all_crops = []  # [id,img],[id,img] 형태로 저장 (트래커별로 저장)
     id_=1
 
-    faceRecognition.setPath(id_, videoPath)
+    face.setPath(videoPath)
     ### model 바꿀거면 여기서 바꾸면 됨!!!!!!!!! ###
     model_name = "Dlib"  # facenet은 FaceNet
     for i in tqdm(range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))):
@@ -143,7 +142,7 @@ def processVideo(videoPath):
                     bounding_box.append(id_)  # x,y,w,h,obj_id,frame_id
                     bounding_box.append(i)
                     all_lists.append(bounding_box)
-                    crop, found_id = faceRecognition.get_cropimg(id_, i, bounding_box[0], bounding_box[1], bounding_box[2],
+                    crop, found_id = face.get_cropimg(id_, i, bounding_box[0], bounding_box[1], bounding_box[2],
                                                  bounding_box[3], True, model_name)
                     all_crops.append([found_id, crop])
                     tem.append(bounding_box)  # tem에 탐지한 모든 얼굴들의 좌표를 저장
@@ -174,7 +173,7 @@ def processVideo(videoPath):
                 print("change")
                 trackers = []
                 for t in range(len(this_box)):
-                    crop, found_id = faceRecognition.get_cropimg(id_, i, this_box[t][0], this_box[t][1], this_box[t][2], this_box[t][3],
+                    crop, found_id = face.get_cropimg(id_, i, this_box[t][0], this_box[t][1], this_box[t][2], this_box[t][3],
                                                  False, model_name)
                     if found_id == id_:  # 현재 id랑 같다, 즉 이전에 동일한 얼굴이 탐지된 적이 없었다 else라면 found_id는 이전에 탐지한 객체의 id
                         id_ += 1
@@ -218,7 +217,7 @@ def processVideo(videoPath):
                 else:  # 트래커가 객체를 하나라도 놓쳤을 때 -> 새롭게 트래커 시작
                     trackers = []  # trackers를 초기화
                     for t in range(len(this_box)):
-                        crop, found_id = faceRecognition.get_cropimg(id_, i, this_box[t][0], this_box[t][1], this_box[t][2],
+                        crop, found_id = face.get_cropimg(id_, i, this_box[t][0], this_box[t][1], this_box[t][2],
                                                      this_box[t][3], False, model_name)
                         if found_id == id_:  # 현재 id랑 같다, 즉 이전에 동일한 얼굴이 탐지된 적이 없었다 else라면 found_id는 이전에 탐지한 객체의 id
                             id_ += 1
@@ -237,19 +236,24 @@ def processVideo(videoPath):
         pp.imshow(frame)
         pp.show()
 
-        print("all_Crops")
-        for c in all_crops:
-            print("id: "+str(c[0]))
-            pp.imshow(c[1])
-            pp.show()
-        return all_crops
+    print("all_Crops")
 
+    result=[]
+    for c in all_crops:
+        # print("id: " + str(c[0]))
+        result.append({
+            c[0]: c[1]
+        })
+        # pp.imshow(c[1])
+        # pp.show()
+
+    print(result)
+    return jsonify({'cropImages':result})
 # 스프링으로 데이터 보내는 테스트 코드
 # @app.route("/sendVideoId", methods=['GET'])
 # def sendVideoId():
 #
 #     return "test"
-
 
 
 if __name__ == '__main__':

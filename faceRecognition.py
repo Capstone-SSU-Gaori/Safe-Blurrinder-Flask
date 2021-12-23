@@ -19,10 +19,11 @@ all_encodings = []  # saving face image encodings for facenet_keras
 all_crops = []  # saving all crop faces
 face_vectors = []  # saving face image vectors from 68 landmarks with id_ [vector,id_] format
 
-global cap
 class faceRecognition:
+    cap = 0
     def setPath(self, path):
         self.cap = cv2.VideoCapture(path)
+        print(self.cap)
 
     def find_by_euclidean(self, img, now_id):
         distance = float("inf")
@@ -60,8 +61,8 @@ class faceRecognition:
 
     def get_cropimg(self, now_id, frame_id, x1, y1, w, h, firstFrame, model="Dlib"):  # model명 받는걸로 바꿔주기
 
-        cap.set(1, frame_id)
-        ret, frame = cap.read()
+        self.cap.set(1, frame_id)
+        ret, frame = self.cap.read()
 
         x1, y1 = int(abs(x1) - 5), int(abs(y1) + 5)
         x2, y2 = x1 + int(w) + 10, y1 + int(h) + 10
