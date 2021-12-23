@@ -13,6 +13,7 @@ from faceRecognition import faceRecognition
 
 app = Flask(__name__)
 dbClass = mod_dbconn.Database()
+global videoPath
 
 # processedVideoId = 0  # 전역 변수로 선언
 
@@ -54,8 +55,10 @@ def getVideoId():
         dbClass.commit()
         print(row['video_path']) # 로컬에서 비디오가 어디에 저장되어 있는지
         # print(row['origin_video_name'])
+        videoPath = row['video_path']
+        print(processVideo(videoPath))
 
-        print(processVideo(row['origin_video_name']))
+        # print(processVideo(row['origin_video_name']))
         # return processVideo(row['origin_video_name']) # 영상처리함수 호출하기
 
         # # fileUpload(row)
@@ -95,16 +98,22 @@ def getVideoId():
     else:
         return "Test" # 완성 영상비디오 번호를 리턴하도록 바꾸기
 
-def processVideo(videoName):
+def processVideo(videoPath):
     # 파일 찾기
     print("hi")
 
     # pathlib.Path.home: 사용자의 홈 디렉토리(~) ex) C:\Users\Windows10
+    # 디비에서 꺼내오기
 
-    path = str(pathlib.Path.home()) + "\GaoriVideos"  # 새로 저장할 폴더
-    filePath = os.path.join(path, videoName)
-    print(filePath)
-    cap = cv2.VideoCapture(filePath)
+    # path = str(pathlib.Path.home()) + "\GaoriVideos"
+    # filePath = os.path.join(path, videoName) # 비디오 이름으로 디비에서 찾아오기
+    print(videoPath)
+
+    if os.path.isfile(videoPath):  # 해당 파일이 있는지 확인
+        # 영상 객체(파일) 가져오기
+        cap = cv2.VideoCapture(videoPath)
+    else:
+        print("파일이 존재하지 않습니다.")
     detector = MTCNN()
     width = round(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = round(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -112,7 +121,6 @@ def processVideo(videoName):
     fps = cap.get(cv2.CAP_PROP_FPS)
     out = cv2.VideoWriter('output.avi', fourcc, fps, (width, height))
     tem = []
-    bbox = []
 
     # tracker 부분
     trackers = []  # [tracker,id],[tracker,id],[],[],,, 형태 -> tracker를 update하거나 접근: tracker[0]으로 접근
@@ -120,6 +128,7 @@ def processVideo(videoName):
     all_crops = []  # [id,img],[id,img] 형태로 저장 (트래커별로 저장)
     id_=1
 
+    faceRecognition.setPath(id_, videoPath)
     ### model 바꿀거면 여기서 바꾸면 됨!!!!!!!!! ###
     model_name = "Dlib"  # facenet은 FaceNet
     for i in tqdm(range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))):
@@ -240,6 +249,8 @@ def processVideo(videoName):
 # def sendVideoId():
 #
 #     return "test"
+
+
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)

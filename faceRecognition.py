@@ -1,11 +1,11 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import numpy as np
 from tensorflow.keras.models import load_model
 import glob
 from scipy.spatial.distance import cosine
 import cv2
 import dlib
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # models for dlib landmark
 sp = None
@@ -19,9 +19,11 @@ all_encodings = []  # saving face image encodings for facenet_keras
 all_crops = []  # saving all crop faces
 face_vectors = []  # saving face image vectors from 68 landmarks with id_ [vector,id_] format
 
-cap = cv2.VideoCapture('short.mp4')
-
+global cap
 class faceRecognition:
+    def setPath(self, path):
+        self.cap = cv2.VideoCapture(path)
+
     def find_by_euclidean(self, img, now_id):
         distance = float("inf")
         found_id = now_id
