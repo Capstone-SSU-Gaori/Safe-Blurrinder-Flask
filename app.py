@@ -1,11 +1,10 @@
 import os
 import pathlib
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, request
 from mod_dbconn import mod_dbconn
 import cv2
-from faceTracker import start_tracker, get_all_crops, get_all_lists, set_video_settings
-from collections import OrderedDict
+from faceTracker import start_tracker, get_all_crops, get_all_lists
 
 app = Flask(__name__)
 dbClass = mod_dbconn.Database()
@@ -85,6 +84,13 @@ def processVideo(videoPath):
     print(images)
     return images
 
+# class frameNumber:
+#     def __init__(self,name):
+#         self.name = name
+#
+#     def __repr__(self):
+#         return "'"+self.name+"'"
+
 def saveImage(crop_img_with_obj_id_list):
     path = str(pathlib.Path.home()) + "\GaoriCropImages"  # 새로 저장할 폴더
     if not os.path.exists(path):  # 폴더가 없는 경우 생성하기
@@ -97,8 +103,12 @@ def saveImage(crop_img_with_obj_id_list):
         for i, c in enumerate(crop_img_with_obj_id_list):
             cv2.imwrite(path + "\\" + str(i) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
             # json 형식으로 변환   ex) 객체 번호 : 이미지 저장된 경로
-            tempResult["frame" + str(c[0])] = path + "\\" + str(i) + ".png"
+            fileNum = "frame"+str(c[0])+"_"+str(i)
+            tempResult[fileNum] = path + "\\" + str(i) + ".png"
+
     return tempResult
+
+
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
