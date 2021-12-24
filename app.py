@@ -297,7 +297,7 @@ def createTable():
 def createImgTable():
     # 크롭이미지 저장할 database table 생성
     sql = "CREATE TABLE crop_image( \
-            id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, \
+            _id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, \
             crop_image_name VARCHAR(256) NOT NULL, \
             crop_image_path VARCHAR(256) NOT NULL \
             )"
@@ -315,7 +315,6 @@ def hello_world():  # put application's code here
 def spring():
     return "test"
 
-
 # 스프링에서 데이터 받는 테스트 코드
 @app.route('/getVideoId', methods=['GET', 'POST'])
 def getVideoId():
@@ -331,45 +330,7 @@ def getVideoId():
 
         videoPath = row['video_path']
         images = processVideo(str(videoPath))
-        print(images)
-        return "hi"
-        # print(processVideo(row['origin_video_name']))
-        # return processVideo(row['origin_video_name']) # 영상처리함수 호출하기
-
-        # # fileUpload(row)
-        # # pathlib.Path.home: 사용자의 홈 디렉토리(~) ex) C:\Users\Windows10
-        # path = str(pathlib.Path.home()) + "\GaoriProcessedVideos"  # 새로 저장할 폴더
-        # if not os.path.exists(path):  # 폴더가 없는 경우 생성하기
-        #     os.makedirs(path)
-        #     return "false"
-        # else:  # 폴더가 있는 경우 폴더에 동영상 업로드
-        #     processed_video_name = row['origin_video_name']  # '방구석 수련회 장기자랑 - YouTube - Chrome 2021-11-05 04-18-36.mp4'
-        #     # 구현 완료 후 : 동영상 이름을 지정
-        #
-        #     saved_video_name = row['saved_video_name']
-        #     # 'af4d1f8d24169c2a8988625d4f2e3455.mp4' ( 완성영상도 같은 이름으로 저장한다고 가정)
-        #
-        #     video_path = row['video_path']  # 'C:\\Users\\Windows10\\GaoriVideos\\af4d1f8d24169c2a8988625d4f2e3455.mp4'
-        #     # 구현 완료 후에는 이게 필요없을 듯
-        #
-        #     shutil.copy(video_path, path)  # 일단은 기존 영상을 새로운 폴더에 복사하는 형태로 해둠
-        #
-        #     new_video_path = "{}\{}".format(path, saved_video_name)  # 완성 영상이 저장될 새로운 경로
-        #
-        #     sql = "INSERT INTO processed_video(processed_video_name, saved_video_name, video_path) \
-        #                         VALUES(%s, %s, %s)"  # 완료된 영상을
-        #     val = (processed_video_name, saved_video_name, new_video_path)
-        #     row = dbClass.executeOne(sql, val)
-        #     dbClass.commit()
-        #     find_sql = "SELECT * \
-        #                                         FROM processed_video \
-        #                                         WHERE saved_video_name=%s"
-        #     row = dbClass.executeOne(find_sql, saved_video_name)  # 일단은 저장한 애를 saved_video_name으로 찾아옴
-        #     dbClass.commit()
-        #     # return "test"
-        #     global processedVideoId
-        #     processedVideoId = str(row['_id'])
-        #     return processedVideoId  # 방금 저장한 videoId를 리턴
+        return jsonify({'cropImages': images})
     else:
         return "Test"  # 완성 영상비디오 번호를 리턴하도록 바꾸기
 
@@ -378,7 +339,6 @@ def processVideo(videoPath):
     # face = faceRecognition() # Class의 선언 없이 해당 클래스의 함수를 사용하려 했기 때문에 발생하는 오류
 
     print("processVideo 함수 :" + videoPath)
-
     if os.path.isfile(videoPath):  # 해당 파일이 있는지 확인
         # 영상 객체(파일) 가져오기
         cap = cv2.VideoCapture(videoPath)
@@ -386,62 +346,34 @@ def processVideo(videoPath):
         print("파일이 존재하지 않습니다.")
 
     start_tracker(cap)
-    positions_with_obj_id_frame_id_list = get_all_lists()
-    print(positions_with_obj_id_frame_id_list)
+    # positions_with_obj_id_frame_id_list = get_all_lists()
     crop_img_with_obj_id_list = get_all_crops()
     print(crop_img_with_obj_id_list)
+    images = saveImage(crop_img_with_obj_id_list)
+    print(images)
+    return images
 
-    df = pd.DataFrame(positions_with_obj_id_frame_id_list)
-    # df.to_csv("좌표들.csv",header=None,index=None)
+def saveImage(crop_img_with_obj_id_list):
+    path = str(pathlib.Path.home()) + "\GaoriCropImages"  # 새로 저장할 폴더
+    if not os.path.exists(path):  # 폴더가 없는 경우 생성하기
+        os.makedirs(path)
+        return "false"
+    else:  # 폴더가 있는 경우 폴더에 이미지 저장
+        result = []
+        for i, c in enumerate(crop_img_with_obj_id_list):
+            cv2.imwrite(path + "\\" + str(c[0]) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
 
-    for i, c in enumerate(crop_img_with_obj_id_list):
-        cv2.imwrite(str(c[0]) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
-
-    # # fileUpload(row)
-    # # pathlib.Path.home: 사용자의 홈 디렉토리(~) ex) C:\Users\Windows10
-    # path = str(pathlib.Path.home()) + "\GaoriCropImages"  # 새로 저장할 폴더
-    # if not os.path.exists(path):  # 폴더가 없는 경우 생성하기
-    #     os.makedirs(path)
-    #     return "false"
-    # else:  # 폴더가 있는 경우 폴더에 크롭이미지 저장
-    #     crop_image_name = row['origin_video_name']  # '방구석 수련회 장기자랑 - YouTube - Chrome 2021-11-05 04-18-36.mp4'
-    #     # 구현 완료 후 : 동영상 이름을 지정
-    #
-    #     crop_image_path = row['saved_video_name']
-    #
-    #
-    #     shutil.copy(video_path, path)  # 일단은 기존 영상을 새로운 폴더에 복사하는 형태로 해둠
-    #
-    #     new_video_path = "{}\{}".format(path, saved_video_name)  # 완성 영상이 저장될 새로운 경로
-    #
-    #     sql = "INSERT INTO processed_video(processed_video_name, saved_video_name, video_path) \
-    #                         VALUES(%s, %s, %s)"  # 완료된 영상을
-    #     val = (processed_video_name, saved_video_name, new_video_path)
-    #     row = dbClass.executeOne(sql, val)
-    #     dbClass.commit()
-
-    # all_crops = []  # [id,img],[id,img] 형태로 저장 (트래커별로 저장)
-    # id_=1
-    #
-    # result=[]
-    # for c in all_crops:
-    #     # print("id: " + str(c[0]))
-    #     result.append({
-    #         c[0]: c[1]
-    #     })
-    #     # pp.imshow(c[1])
-    #     # pp.show()
-    #
-    # print(result)
-    return jsonify({'cropImages': 'hi'})
-
+            # json 형식으로 변환   ex) 객체 번호 : 이미지 저장된 경로
+            result.append({
+                c[0]: path + "\\" + str(c[0]) + ".png"
+            })
+    return result
 
 # 스프링으로 데이터 보내는 테스트 코드
 # @app.route("/sendVideoId", methods=['GET'])
 # def sendVideoId():
 #
 #     return "test"
-
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
