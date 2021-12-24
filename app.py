@@ -360,7 +360,8 @@ def saveImage(crop_img_with_obj_id_list):
         return "false"
     else:  # 폴더가 있는 경우 폴더에 이미지 저장
         tempResult = []
-        # result = []
+        i = 0
+        c = 0
         for i, c in enumerate(crop_img_with_obj_id_list):
             cv2.imwrite(path + "\\" + str(i) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
 
@@ -369,9 +370,6 @@ def saveImage(crop_img_with_obj_id_list):
                 c[0]: path + "\\" + str(i) + ".png"
             })
 
-            # result.append({
-            #     c[0]: path + "\\" + str(c[0]) + ".png"
-            # })
 
         # # 중복 데이터 삭제
         # values = []
