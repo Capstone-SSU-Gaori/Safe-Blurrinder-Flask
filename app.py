@@ -346,7 +346,7 @@ def processVideo(videoPath):
         print("파일이 존재하지 않습니다.")
 
     start_tracker(cap)
-    # positions_with_obj_id_frame_id_list = get_all_lists()
+    positions_with_obj_id_frame_id_list = get_all_lists()
     crop_img_with_obj_id_list = get_all_crops()
     print(crop_img_with_obj_id_list)
     images = saveImage(crop_img_with_obj_id_list)
@@ -359,15 +359,27 @@ def saveImage(crop_img_with_obj_id_list):
         os.makedirs(path)
         return "false"
     else:  # 폴더가 있는 경우 폴더에 이미지 저장
-        result = []
+        tempResult = []
+        # result = []
         for i, c in enumerate(crop_img_with_obj_id_list):
-            cv2.imwrite(path + "\\" + str(c[0]) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
+            cv2.imwrite(path + "\\" + str(i) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
 
             # json 형식으로 변환   ex) 객체 번호 : 이미지 저장된 경로
-            result.append({
-                c[0]: path + "\\" + str(c[0]) + ".png"
+            tempResult.append({
+                c[0]: path + "\\" + str(i) + ".png"
             })
-    return result
+
+            # result.append({
+            #     c[0]: path + "\\" + str(c[0]) + ".png"
+            # })
+
+        # # 중복 데이터 삭제
+        # values = []
+        # values = {val: key for key, val in tempResult.items()}
+        # result = {val: key for key, val in values.items()}
+
+        print(tempResult)
+    return tempResult
 
 # 스프링으로 데이터 보내는 테스트 코드
 # @app.route("/sendVideoId", methods=['GET'])
