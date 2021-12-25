@@ -1,3 +1,6 @@
+import hashlib
+import os
+
 def iou(bbox1, bbox2):
 
     bbox1 = [float(x) for x in bbox1]
@@ -23,3 +26,13 @@ def iou(bbox1, bbox2):
     size_union = size_1 + size_2 - size_intersection
 
     return size_intersection / size_union
+
+def generate_hash(origin_text):
+    md5_hash = hashlib.md5()
+    origin_text=origin_text.encode('utf-8')
+
+    salt=os.urandom(16) #랜덤성 추가
+    md5_hash.update(origin_text+salt)
+    hashed=md5_hash.hexdigest()
+
+    return hashed
