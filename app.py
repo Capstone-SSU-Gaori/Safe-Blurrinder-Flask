@@ -1,7 +1,7 @@
 import os
 import pathlib
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from mod_dbconn import mod_dbconn
 import cv2
 from faceTracker import start_tracker, get_all_crops, get_all_lists
@@ -82,7 +82,7 @@ def processVideo(videoPath):
     crop_img_with_obj_id_list = get_all_crops()
     images = saveImage(crop_img_with_obj_id_list)
     print(images)
-    return images
+    return jsonify({'cropImages': images})
 
 # class frameNumber:
 #     def __init__(self,name):
@@ -97,15 +97,25 @@ def saveImage(crop_img_with_obj_id_list):
         os.makedirs(path)
         return "false"
     else:  # 폴더가 있는 경우 폴더에 이미지 저장
-        tempResult = {}
+        # tempResult = {}
+        # i = 0
+        # c = 0
+        # for i, c in enumerate(crop_img_with_obj_id_list):
+        #     cv2.imwrite(path + "\\" + str(i) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
+        #     # json 형식으로 변환   ex) 객체 번호 : 이미지 저장된 경로
+        #     fileNum = "frame"+str(c[0])+"_"+str(i)
+        #     tempResult[fileNum] = path + "\\" + str(i) + ".png"
+        tempResult = []
         i = 0
         c = 0
         for i, c in enumerate(crop_img_with_obj_id_list):
             cv2.imwrite(path + "\\" + str(i) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
             # json 형식으로 변환   ex) 객체 번호 : 이미지 저장된 경로
-            fileNum = "frame"+str(c[0])+"_"+str(i)
-            tempResult[fileNum] = path + "\\" + str(i) + ".png"
-
+            fileNum = "frame" + str(c[0])
+            tempResult.append({
+                fileNum: path + "\\" + str(i) + ".png"
+            })
+        print(tempResult)
     return tempResult
 
 
