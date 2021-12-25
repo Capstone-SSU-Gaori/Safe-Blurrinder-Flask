@@ -113,7 +113,7 @@ def saveImage(crop_img_with_obj_id_list):
             # json 형식으로 변환   ex) 객체 번호 : 이미지 저장된 경로
             fileNum = "frame" + str(c[0])
             tempResult.append({
-                fileNum: path + "\\" + str(i) + ".png"
+                fileNum: str(i) + ".png"
             })
         print(tempResult)
     return tempResult
