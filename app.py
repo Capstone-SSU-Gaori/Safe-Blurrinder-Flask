@@ -6,6 +6,7 @@ from mod_dbconn import mod_dbconn
 import cv2
 from faceTracker import start_tracker, get_all_crops, get_all_lists
 from faceBlurring import blurr_apply
+from utils import generate_hash
 
 app = Flask(__name__)
 dbClass = mod_dbconn.Database()
@@ -153,6 +154,7 @@ def saveImage(crop_img_with_obj_id_list):
         print(tempResult)
     return tempResult
 
+
 def process_blur(videoPath,videoName):
 
     if os.path.isfile(videoPath):  # 해당 파일이 있는지 확인
@@ -167,23 +169,27 @@ def process_blur(videoPath,videoName):
         os.makedirs(path)
 
     getOnlyName=videoName.split('.') # 뒤의 .mp4나 .avi를 잘라서 이름만 가져옴
-    savePathandName=path+"\\"+getOnlyName[0] # ~\GaoriProcessedVideos\vidname
+    processedName=getOnlyName[0]+'_output' # 원래비디오이름_output
+    hashedName=generate_hash(processedName) # 위의 이름의 hash값
+    savePathandName=path+"\\"+hashedName # ~\GaoriProcessedVideos\hash값
     # print("save path and name: "+savePathandName)
     savePath=blurr_apply(allLists,[1,2],cap,savePathandName)  # [1,2]는 사용자가 선택한 블러 제외 대상이 들어와야함
-    # savePath: ~\GaoriProcessedVides\vidname_output.avi
+    # savePath: ~\GaoriProcessedVides\hash값.avi
     
-    _id=saveBlurredVideo(savePath)
+    _id=saveBlurredVideo(savePath,processedName)
 
     return _id
 
 
-def saveBlurredVideo(savePath):
+def saveBlurredVideo(savePath,processedName):
     splitForName=savePath.split("\\")
-    saveVidName=splitForName[-1] #saveVidName: originalvidname_output.avi
+    hashedVidName=splitForName[-1] #hashedVidName: hash값.avi
+    savedVidName=processedName+'.'+hashedVidName.split('.')[1] # 원본영상_output.avi
+
 
     # 데이터베이스에 영상 저장 후 ID 가져옴
     sql = "INSERT INTO processed_video2 (processed_video_name, saved_video_name, video_path) VALUES (%s, %s, %s)"
-    val = (saveVidName, saveVidName, savePath) # saved_video_name 나중에 hash값으로 변경해야함
+    val = (savedVidName, hashedVidName, savePath) # saved_video_name 나중에 hash값으로 변경해야함
 
     dbClass.executeOne(sql,val)
     dbClass.commit()
@@ -191,7 +197,7 @@ def saveBlurredVideo(savePath):
     sql = "SELECT * \
                     FROM processed_video2 \
                     WHERE saved_video_name=%s"
-    row = dbClass.executeOne(sql, saveVidName)
+    row = dbClass.executeOne(sql, hashedVidName)
     dbClass.commit()
 
     _id=int(row['_id'])

@@ -10,7 +10,7 @@ def blurr_apply(lst_all, lst_remove,cap,pathandName):
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    saveVidPath=pathandName+"_output.avi"
+    saveVidPath=pathandName+".avi"
     print("save Name and path: "+str(saveVidPath))  # ~\GaoriProcessedVideos\원본비디오이름_output.avi => 해당 경로에 원본이름_output.avi 가 저장됨
     out = cv2.VideoWriter(saveVidPath, fourcc, fps, (w, h))
     
