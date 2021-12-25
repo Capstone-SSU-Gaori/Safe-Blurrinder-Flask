@@ -3,15 +3,17 @@ from tqdm import tqdm_notebook as tqdm
 import numpy as np
 
 # lst_all = [x,y,w,h,obj_id,frame_id] / lst_remove = 블러처리 제외할 객체 리스트[obj_di, obj_id,,,,,,,]
-def blurr_apply(lst_all, lst_remove):
-    cap = cv2.VideoCapture('test.mp4')
-    # print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    # print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+def blurr_apply(lst_all, lst_remove,cap,pathandName):
+    # cap = cv2.VideoCapture('test.mp4')
     w = round(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = round(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     fps = cap.get(cv2.CAP_PROP_FPS)
-    out = cv2.VideoWriter('output.avi', fourcc, fps, (w, h))
+
+    saveVidPath=pathandName+"_output.avi"
+    print("save Name and path: "+str(saveVidPath))  # ~\GaoriProcessedVideos\원본비디오이름_output.avi => 해당 경로에 원본이름_output.avi 가 저장됨
+    out = cv2.VideoWriter(saveVidPath, fourcc, fps, (w, h))
+    
     for i in tqdm(range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))):
         retval, frame = cap.read()
         # 일단 같은 프레임인지 찾는다. 근데 lst_all 엄청 길텐데 그럼 효율이 쓰레기가 되지 않을까.ㅎ
@@ -20,10 +22,10 @@ def blurr_apply(lst_all, lst_remove):
             if lst_all[t][5] == i:
 
                 # 이 부분은 리스트에 remove 리스트에 있는 객체만 제외시키려고!
-                check = True;
+                check = True
                 for a in range(0, len(lst_remove)):
                     if lst_all[t][4] == lst_remove[a]:
-                        check = False;
+                        check = False
 
                 # 블러처리하는 부분 입니다,
                 if check == True:
@@ -58,3 +60,5 @@ def blurr_apply(lst_all, lst_remove):
     # files.download('output.avi')
     # pp.imshow(frame)
     # pp.show()
+    return saveVidPath
+
