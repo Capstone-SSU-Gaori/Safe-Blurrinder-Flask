@@ -74,30 +74,31 @@ def getVideoId():
         return "Test"  # 완성 영상비디오 번호를 리턴하도록 바꾸기
 
 
-# @app.route('/finishProcess',methods=['GET']) #쪼개다가 실패한,,, 부분
-# def finishProcess():
-#     return images
-
-
 # 아래 부분 일단 GET으로 바꿈 + id임의 지정으로 제대로 로컬에 저장되는지, DB에 저장되는지 까지만 확인했음
-@app.route('/applyBlur',methods=['POST'])
+@app.route('/applyBlur',methods=['POST','GET'])
 def applyBlur():
-    print('JSON확인 : ', request.is_json) # ㅎ.ㅎ 은주언니 코드는 제가 훔쳐갑니다 ^~^
-    content = request.get_json()
-    videoId = int(content['videoId'])  # getVideoID와 마찬가지로 블러 적용해야할 영상을 uploaded_video에서 꺼내옴
-    sql = "SELECT * \
-                    FROM uploaded_video \
-                    WHERE _id=%s"
-    row = dbClass.executeOne(sql, videoId)
-    dbClass.commit()
+    if request.method=='POST':
+        print('JSON확인 : ', request.is_json) # ㅎ.ㅎ 은주언니 코드는 제가 훔쳐갑니다 ^~^
+        content = request.get_json()
+        targetList = content['targetAndId']  # getVideoID와 마찬가지로 블러 적용해야할 영상을 uploaded_video에서 꺼내옴
+        videoId=targetList[0]
+        del targetList[0]
+        print(targetList)
+        sql = "SELECT * \
+                        FROM uploaded_video \
+                        WHERE _id=%s"
+        row = dbClass.executeOne(sql, videoId)
+        dbClass.commit()
 
-    # 고민되는게 좌표담긴 list를 DB에 저장해야할지 아니면 전역변수로 그냥 둬도 괜찮을지,,, 를 모르겠네요
-    # DB에 저장해야 한다면 그냥 varchar로 저장해서 , 단위로 자르고 -> 6칸씩 나눠서 다시 2차원 배열로 만들어 넘겨야할지
-    videoPath = row['video_path']
-    videoName=row['origin_video_name']
+        # 고민되는게 좌표담긴 list를 DB에 저장해야할지 아니면 전역변수로 그냥 둬도 괜찮을지,,, 를 모르겠네요
+        # DB에 저장해야 한다면 그냥 varchar로 저장해서 , 단위로 자르고 -> 6칸씩 나눠서 다시 2차원 배열로 만들어 넘겨야할지
+        videoPath = row['video_path']
+        videoName=row['origin_video_name']
 
-    blurAppliedId=process_blur(str(videoPath),str(videoName))
-    return str(blurAppliedId) # 블러 적용하고 processedVideo2 DB에 저장된 영상의 id를 return
+        blurAppliedId=process_blur(str(videoPath),str(videoName),targetList)
+        return str(blurAppliedId) # 블러 적용하고 processedVideo2 DB에 저장된 영상의 id를 return
+    else:
+        return "get"
 
 
 def processVideo(videoPath):
@@ -147,7 +148,7 @@ def saveImage(crop_img_with_obj_id_list):
     return tempResult
 
 
-def process_blur(videoPath,videoName):
+def process_blur(videoPath,videoName,targetList):
     if os.path.isfile(videoPath):  # 해당 파일이 있는지 확인
         # 영상 객체(파일) 가져오기
         cap = cv2.VideoCapture(videoPath)
@@ -164,7 +165,7 @@ def process_blur(videoPath,videoName):
     hashedName=generate_hash(processedName) # 위의 이름의 hash값
     savePathandName=path+"\\"+hashedName # ~\GaoriProcessedVideos\hash값
     # print("save path and name: "+savePathandName)
-    savePath=blurr_apply(allLists,[1,2],cap,savePathandName)  # [1,2]는 사용자가 선택한 블러 제외 대상이 들어와야함
+    savePath=blurr_apply(allLists,targetList,cap,savePathandName)  # [1,2]는 사용자가 선택한 블러 제외 대상이 들어와야함
     # savePath: ~\GaoriProcessedVides\hash값.avi
     
     _id=saveBlurredVideo(savePath,processedName)
