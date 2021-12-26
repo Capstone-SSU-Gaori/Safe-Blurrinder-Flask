@@ -13,32 +13,26 @@ def blurr_apply(lst_all, lst_remove,cap,pathandName):
     saveVidPath=pathandName+".avi"
     print("save Name and path: "+str(saveVidPath))  # ~\GaoriProcessedVideos\원본비디오이름_output.avi => 해당 경로에 원본이름_output.avi 가 저장됨
     out = cv2.VideoWriter(saveVidPath, fourcc, fps, (w, h))
-    
+
     for i in tqdm(range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))):
         retval, frame = cap.read()
         # 일단 같은 프레임인지 찾는다. 근데 lst_all 엄청 길텐데 그럼 효율이 쓰레기가 되지 않을까.ㅎ
         for t in range(0, len(lst_all)):
             # 프레임의 번호가 같을때
-            if lst_all[t][5] == i:
+            if lst_all[t][4] == i:
 
                 # 이 부분은 리스트에 remove 리스트에 있는 객체만 제외시키려고!
-                check = True
+                check = True;
                 for a in range(0, len(lst_remove)):
-                    if lst_all[t][4] == lst_remove[a]:
-                        check = False
+                    if lst_all[t][5] == lst_remove[a]:
+                        check = False;
 
                 # 블러처리하는 부분 입니다,
                 if check == True:
-                    # print(str(lst_all[t][4])+"a")
-                    height = lst_all[t][3]
-                    width = lst_all[t][2]
-
-                    if (lst_all[t][1] < 0 or lst_all[t][0] < 0):
-                        yPos = 0
-                        xPos = 0
-                    else:
-                        yPos = lst_all[t][1]
-                        xPos = lst_all[t][0]
+                    height = abs(lst_all[t][1] - lst_all[t][3])
+                    width = abs(lst_all[t][0] - lst_all[t][2])
+                    yPos = min(lst_all[t][1], lst_all[t][3])
+                    xPos = min(lst_all[t][0], lst_all[t][2])
 
                     face_img = frame[yPos:yPos + height, xPos:xPos + width]  # 탐지된 얼굴 크롭
                     c_mask = np.zeros((height, width), np.uint8)

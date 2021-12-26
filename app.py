@@ -97,7 +97,6 @@ def applyBlur():
     videoName=row['origin_video_name']
 
     blurAppliedId=process_blur(str(videoPath),str(videoName))
-
     return str(blurAppliedId) # 블러 적용하고 processedVideo2 DB에 저장된 영상의 id를 return
 
 
@@ -119,13 +118,6 @@ def processVideo(videoPath):
     print(images)
     # print(allLists)
     return jsonify({'cropImages': images})
-
-# class frameNumber:
-#     def __init__(self,name):
-#         self.name = name
-#
-#     def __repr__(self):
-#         return "'"+self.name+"'"
 
 def saveImage(crop_img_with_obj_id_list):
     path = str(pathlib.Path.home()) + "\GaoriCropImages"  # 새로 저장할 폴더
@@ -156,7 +148,6 @@ def saveImage(crop_img_with_obj_id_list):
 
 
 def process_blur(videoPath,videoName):
-
     if os.path.isfile(videoPath):  # 해당 파일이 있는지 확인
         # 영상 객체(파일) 가져오기
         cap = cv2.VideoCapture(videoPath)
