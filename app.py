@@ -126,14 +126,6 @@ def saveImage(crop_img_with_obj_id_list):
         os.makedirs(path)
         return "false"
     else:  # 폴더가 있는 경우 폴더에 이미지 저장
-        # tempResult = {}
-        # i = 0
-        # c = 0
-        # for i, c in enumerate(crop_img_with_obj_id_list):
-        #     cv2.imwrite(path + "\\" + str(i) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
-        #     # json 형식으로 변환   ex) 객체 번호 : 이미지 저장된 경로
-        #     fileNum = "frame"+str(c[0])+"_"+str(i)
-        #     tempResult[fileNum] = path + "\\" + str(i) + ".png"
         tempResult = []
         i = 0
         c = 0
