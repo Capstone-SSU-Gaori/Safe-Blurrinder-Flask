@@ -13,11 +13,13 @@ all_lists = []  # [x1,y1,x2,y2,frame_id,obj_id],[],[],,, 형태로 저장
 all_crops = []  # [id,img],[id,img] 형태로 저장 (트래커별로 저장)
 
 model_name = "Dlib"
+face = faceRecognition()
 
 def start_tracker(cap):
-    face = faceRecognition()
-    cap,width,height,fourcc,fps,out = set_video_settings(cap)
+    
     face.setCap(cap)  # 얼굴인식 파일에서 사용할 비디오 이름 setting
+    cap,width,height,fourcc,fps,out = set_video_settings(cap)
+    
 
     id_ = 1
     ddetector = dlib.get_frontal_face_detector()
@@ -204,7 +206,7 @@ def start_tracker(cap):
         out.write(frame)
 
 def new_tracker(frame, this_box, id_, i):
-    face = faceRecognition()
+    # face = faceRecognition()
     print("start new tracker")
     trackers = []  # trackers를 초기화
     for t in range(len(this_box)):
