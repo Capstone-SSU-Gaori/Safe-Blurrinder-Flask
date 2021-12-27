@@ -1,31 +1,31 @@
 import hashlib
 import os
 
-def iou(bbox1, bbox2):
+def iou(b1, b2):
+    #x1,y1,x2,y2 순서로 값이 넘어옴 (순서대로 [0],[1],[2],[3])
 
-    bbox1 = [float(x) for x in bbox1]
-    bbox2 = [float(x) for x in bbox2]
+    # 겹치는 영역 계산용 좌표
+    max_x = max(b1[0], b2[0])
+    max_y = max(b1[1], b2[1])
+    min_x = min(b1[2], b2[2])
+    min_y = min(b1[3], b2[3])
 
-    (x0_1, y0_1, x1_1, y1_1) = bbox1
-    (x0_2, y0_2, x1_2, y1_2) = bbox2
-
-    # get the overlap rectangle
-    overlap_x0 = max(x0_1, x0_2)
-    overlap_y0 = max(y0_1, y0_2)
-    overlap_x1 = min(x1_1, x1_2)
-    overlap_y1 = min(y1_1, y1_2)
-
-    # check if there is an overlap
-    if overlap_x1 - overlap_x0 <= 0 or overlap_y1 - overlap_y0 <= 0:
+    # 겹치는 영역이 아예 없으면 확인 X, 바로 return
+    if max_x-min_x >= 0 or max_y-min_y>= 0:
         return 0
 
-    # if yes, calculate the ratio of the overlap to each ROI size and the unified size
-    size_1 = (x1_1 - x0_1) * (y1_1 - y0_1)
-    size_2 = (x1_2 - x0_2) * (y1_2 - y0_2)
-    size_intersection = (overlap_x1 - overlap_x0) * (overlap_y1 - overlap_y0)
-    size_union = size_1 + size_2 - size_intersection
+    b1_w=b1[2]-b1[0]
+    b1_h=b1[3]-b1[1]
+    b2_w=b2[2]-b2[0]
+    b2_h=b2[3]-b2[1]
 
-    return size_intersection / size_union
+    b1_size = b1_w*b1_h
+    b2_size = b2_w*b2_h
+
+    intersection = (min_x - max_x) * (min_y - max_y) # 교집합 영역  크기
+    union = b1_size + b2_size - intersection # 합집합 영역 크기
+
+    return intersection / union  # 교집합/합집합 비율 return -> 클 수록 동일 인물일 가능성이 높아진다.
 
 def generate_hash(origin_text):
     md5_hash = hashlib.md5()

@@ -66,6 +66,7 @@ def getVideoId():
 
         videoPath = row['video_path']
         global images
+        images=[]
         images = processVideo(str(videoPath))
         # return jsonify({'cropImages': images})
         # finishProcess(images)
@@ -113,6 +114,7 @@ def processVideo(videoPath):
     start_tracker(cap)
     positions_with_obj_id_frame_id_list = get_all_lists()
     global allLists
+    allLists=[]
     allLists=positions_with_obj_id_frame_id_list # global 변수 allLists에 [[x1,y1,x2,y2,frame_id,obj_id],[]] 저장 
     crop_img_with_obj_id_list = get_all_crops()
     images = saveImage(crop_img_with_obj_id_list)
