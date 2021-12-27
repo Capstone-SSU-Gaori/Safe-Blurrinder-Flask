@@ -111,6 +111,8 @@ def processVideo(videoPath):
     else:
         print("파일이 존재하지 않습니다.")
 
+    print("check cap")
+    print(cap)
     start_tracker(cap)
     positions_with_obj_id_frame_id_list = get_all_lists()
     global allLists
@@ -123,7 +125,7 @@ def processVideo(videoPath):
     return jsonify({'cropImages': images})
 
 def saveImage(crop_img_with_obj_id_list):
-    path = str(pathlib.Path.home()) + "\GaoriCropImages"  # 새로 저장할 폴더
+    path = str(pathlib.Path.home()) + "/GaoriCropImages"  # 새로 저장할 폴더
     if not os.path.exists(path):  # 폴더가 없는 경우 생성하기
         os.makedirs(path)
         return "false"
@@ -132,7 +134,7 @@ def saveImage(crop_img_with_obj_id_list):
         i = 0
         c = 0
         for i, c in enumerate(crop_img_with_obj_id_list):
-            cv2.imwrite(path + "\\" + str(i) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
+            cv2.imwrite(path + "/" + str(i) + ".png", c[1])  # 이렇게 하면 id.png 로 대표 얼굴 저장됨니다
             # json 형식으로 변환   ex) 객체 번호 : 이미지 저장된 경로
             fileNum = "frame" + str(c[0])
             tempResult.append({
@@ -150,14 +152,14 @@ def process_blur(videoPath,videoName,targetList):
         print("파일이 존재하지 않습니다.")
         return -1
 
-    path = str(pathlib.Path.home()) + "\GaoriProcessedVideos"  # 새로 저장할 폴더
+    path = str(pathlib.Path.home()) + "/GaoriProcessedVideos"  # 새로 저장할 폴더
     if not os.path.exists(path):  # 폴더가 없는 경우 생성하기
         os.makedirs(path)
 
     getOnlyName=videoName.split('.') # 뒤의 .mp4나 .avi를 잘라서 이름만 가져옴
     processedName=getOnlyName[0]+'_output' # 원래비디오이름_output
     hashedName=generate_hash(processedName) # 위의 이름의 hash값
-    savePathandName=path+"\\"+hashedName # ~\GaoriProcessedVideos\hash값
+    savePathandName=path+"/"+hashedName # ~\GaoriProcessedVideos\hash값
     # print("save path and name: "+savePathandName)
     savePath=blurr_apply(allLists,targetList,cap,savePathandName)  # [1,2]는 사용자가 선택한 블러 제외 대상이 들어와야함
     # savePath: ~\GaoriProcessedVides\hash값.mp4
@@ -168,7 +170,7 @@ def process_blur(videoPath,videoName,targetList):
 
 
 def saveBlurredVideo(savePath,processedName):
-    splitForName=savePath.split("\\")
+    splitForName=savePath.split("/")
     hashedVidName=splitForName[-1] #hashedVidName: hash값.avi
     savedVidName=processedName+'.'+hashedVidName.split('.')[1] # 원본영상_output.avi
 
