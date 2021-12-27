@@ -87,7 +87,7 @@ def applyBlur():
         sql = "SELECT * \
                         FROM uploaded_video \
                         WHERE _id=%s"
-        row = dbClass.executeOne(sql, videoId)
+        row = dbClass.executeOne(sql, videoId) # 원본 비디오 정보 꺼내오기
         dbClass.commit()
 
         # 고민되는게 좌표담긴 list를 DB에 저장해야할지 아니면 전역변수로 그냥 둬도 괜찮을지,,, 를 모르겠네요
