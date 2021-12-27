@@ -158,7 +158,7 @@ def process_blur(videoPath,videoName,targetList):
     savePathandName=path+"\\"+hashedName # ~\GaoriProcessedVideos\hash값
     # print("save path and name: "+savePathandName)
     savePath=blurr_apply(allLists,targetList,cap,savePathandName)  # [1,2]는 사용자가 선택한 블러 제외 대상이 들어와야함
-    # savePath: ~\GaoriProcessedVides\hash값.avi
+    # savePath: ~\GaoriProcessedVides\hash값.mp4
     
     _id=saveBlurredVideo(savePath,processedName)
 

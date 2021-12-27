@@ -7,10 +7,10 @@ def blurr_apply(lst_all, lst_remove,cap,pathandName):
     # cap = cv2.VideoCapture('test.mp4')
     w = round(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = round(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    saveVidPath=pathandName+".avi"
+    saveVidPath=pathandName+".mp4"
     print("save Name and path: "+str(saveVidPath))  # ~\GaoriProcessedVideos\원본비디오이름_output.avi => 해당 경로에 원본이름_output.avi 가 저장됨
     out = cv2.VideoWriter(saveVidPath, fourcc, fps, (w, h))
 
@@ -22,10 +22,10 @@ def blurr_apply(lst_all, lst_remove,cap,pathandName):
             if lst_all[t][4] == i:
 
                 # 이 부분은 리스트에 remove 리스트에 있는 객체만 제외시키려고!
-                check = True;
+                check = True
                 for a in range(0, len(lst_remove)):
                     if lst_all[t][5] == lst_remove[a]:
-                        check = False;
+                        check = False
 
                 # 블러처리하는 부분 입니다,
                 if check == True:
