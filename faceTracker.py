@@ -16,8 +16,8 @@ model_name = "Dlib"
 
 def start_tracker(cap):
     face = faceRecognition()
-    cap,width,height,fourcc,fps,out = set_video_settings(cap)
     face.setCap(cap)  # 얼굴인식 파일에서 사용할 비디오 이름 setting
+    cap,width,height,fourcc,fps,out = set_video_settings(cap)
 
     id_ = 1
     ddetector = dlib.get_frontal_face_detector()
