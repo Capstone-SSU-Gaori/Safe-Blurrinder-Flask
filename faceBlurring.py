@@ -22,10 +22,10 @@ def blurr_apply(lst_all, lst_remove,cap,pathandName):
             if lst_all[t][4] == i:
 
                 # 이 부분은 리스트에 remove 리스트에 있는 객체만 제외시키려고!
-                check = True;
+                check = True
                 for a in range(0, len(lst_remove)):
                     if lst_all[t][5] == lst_remove[a]:
-                        check = False;
+                        check = False
 
                 # 블러처리하는 부분 입니다,
                 if check == True:
