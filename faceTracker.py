@@ -124,67 +124,11 @@ def start_tracker(cap):
                         print(False)
 
                 if (judge == True):  # 트래커가 모든 객체를 정상적으로 탐지했을 때
-                    passok = False
-                    if len(this_box) < (len(trackers) - 2) or (
-                            len(trackers) == 2 and (565 < i < 580 or 670 < i < 680 or 764 < i < 775) and len(
-                            this_box) == 1):
-
-                        checkcheck = []
-                        for tb in this_box:
-                            crop, found_id = face.get_cropimg(id_, i, tb[0], tb[1], tb[2], tb[3], False, model_name)
-                            if found_id != id_:
-                                checkcheck.append(found_id)
-
-                        isok = False
-                        for c in checkcheck:
-                            for track in trackers:
-                                if c == track[1]:
-                                    isok = True
-                                    break
-                        if checkcheck == []:
-                            passok = False
-
-                        if 1 not in checkcheck:
-                            isok = True
-
-                        elif isok == False or (len(checkcheck) == 1 and (checkcheck[0] == 1 or checkcheck[0] == 2)):
-                            # 트래커 재시작으로 보내주기
-                            print("frame: " + str(i))
-                            trackers, frame, id_ = new_tracker(frame, this_box, id_, i)
-                            passok = True
-
-                    elif len(this_box) == len(trackers) == 2 and (
-                            358 < i < 366 or 423 < i < 429):  # 게스트 <-> 안영미, 김구라 변환 2회
-                        passok = False
-                        tem_id = id_
-                        checkcheck = []
-                        for tb in this_box:
-                            crop, found_id = face.get_cropimg(tem_id, i, tb[0], tb[1], tb[2], tb[3], False, model_name)
-                            checkcheck.append(found_id)
-                            tem_id += 1
-
-                        isok = False
-                        for c in checkcheck:
-                            for track in trackers:
-                                if c == track[1]:
-                                    isok = True
-                                    break
-
-                        if isok == False and len(checkcheck) == 2:
-                            track_list = []
-                            for track in trackers:
-                                track_list.append(track[1])
-                            if (1 in track_list and 2 in track_list) or (1 in checkcheck and 2 in checkcheck):
-                                print("frame: " + str(i))
-                                trackers, frame, id_ = new_tracker(frame, this_box, id_, i)
-                                passok = True
-
-                    if passok == False:
-                        for t in range(len(tempor)):  # tempor (새롭게 탐지한 객체의 좌표를 추가함) -> 현재 프레임의 update 정보 반영
-                            x1, y1, x2, y2, tracker_id = tempor[t]
-                            # cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0),2,1)
-                            # cv2.putText(frame, "id: "+str(tracker_id), (int(x1),int(y1)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-                            all_lists.append([x1, y1, x2, y2, i, tracker_id])
+                    for t in range(len(tempor)):  # tempor (새롭게 탐지한 객체의 좌표를 추가함) -> 현재 프레임의 update 정보 반영
+                        x1, y1, x2, y2, tracker_id = tempor[t]
+                        # cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0),2,1)
+                        # cv2.putText(frame, "id: "+str(tracker_id), (int(x1),int(y1)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+                        all_lists.append([x1, y1, x2, y2, i, tracker_id])
 
                 else:  # 트래커가 객체를 하나라도 놓쳤을 때 -> 새롭게 트래커 시작
                     #                 trackers,frame,id_=new_tracker(frame,this_box,id_)
@@ -203,25 +147,6 @@ def start_tracker(cap):
                         # cv2.putText(frame, "id: "+str(found_id), (int(x),int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
 
         out.write(frame)
-
-def new_tracker(frame, this_box, id_, i):
-    # face = faceRecognition()
-    print("start new tracker")
-    trackers = []  # trackers를 초기화
-    for t in range(len(this_box)):
-        x, y, w, h = this_box[t]
-        crop, found_id = face.get_cropimg(id_, i, x, y, w, h, False, model_name)
-        if found_id == id_:  # 현재 id랑 같다, 즉 이전에 동일한 얼굴이 탐지된 적이 없었다 else라면 found_id는 이전에 탐지한 객체의 id
-            id_ += 1
-        trackers.append([cv2.TrackerCSRT_create(), found_id])
-        trackers[t][0].init(frame, (x, y, w, h))
-        all_crops.append([found_id, crop])  # 어떤 경우에든 id랑 crop image둘 다 저장 (인식 실패 가능성)
-        all_lists.append([x, y, x + w, y + h, i, found_id])
-
-        #   cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2,1)
-    #   cv2.putText(frame, "id: "+str(found_id), (int(x),int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-
-    return trackers, frame, id_
 
 def get_all_crops():
     global all_crops
